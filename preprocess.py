@@ -47,7 +47,7 @@ def extraSourceFile():
 
 def model_train(sentences, save_model_name='word2vec'):
     # 训练skip-gram模型;
-    model = gensim.models.Word2Vec(sentences, size=200, window=5, iter=10, min_count=2)
+    model = gensim.models.Word2Vec(sentences, size=128, window=5, iter=10, min_count=2)
     # 保存模型，以便重用
     model.wv.save(util.modelPath + save_model_name + '.model')
 
