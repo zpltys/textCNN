@@ -5,7 +5,7 @@ import numpy as np
 
 class TextCNN:
     def __init__(self, filter_sizes, num_filters, num_classes, learning_rate, batch_size, decay_steps, decay_rate, sequence_length,vocab_size, embed_size,
-                 initializer=tf.random_normal_initializer(stddev=0.1), multi_label_flag=False, clip_gradients=5.0, decay_rate_big=0.50):
+                 initializer=tf.random_normal_initializer(stddev=0.1), clip_gradients=5.0, decay_rate_big=0.50):
         """init all hyperparameter here"""
         # set hyperparamter
         self.num_classes = num_classes
@@ -19,13 +19,12 @@ class TextCNN:
         self.num_filters = num_filters
         self.initializer = initializer
         self.num_filters_total = self.num_filters * len(filter_sizes) #how many filters totally.
-        self.multi_label_flag = multi_label_flag
         self.clip_gradients = clip_gradients
         self.is_training_flag = tf.placeholder(tf.bool, name="is_training_flag")
 
         # add placeholder (X,label)
         self.input_x = tf.placeholder(tf.int32, [None, self.sequence_length], name="input_x")  # X
-        self.input_y_multilabel = tf.placeholder(tf.float32, [None, self.num_classes], name="input_y_multilabel")
+        self.input_y = tf.placeholder(tf.float32, [None, self.num_classes], name="input_y")
         self.dropout_keep_prob = tf.placeholder(tf.float32,name="dropout_keep_prob")
         self.iter = tf.placeholder(tf.int32) #training iteration
         self.tst = tf.placeholder(tf.bool)
@@ -44,11 +43,7 @@ class TextCNN:
 
         self.loss_val = self.loss_multilabel()
         self.train_op = self.train()
-        if not self.multi_label_flag:
-            self.predictions = tf.argmax(self.logits, 1, name="predictions")  # shape:[None,]
-            print("self.predictions:", self.predictions)
-            correct_prediction = tf.equal(tf.cast(self.predictions, tf.int32), self.input_y) #tf.argmax(self.logits, 1)-->[batch_size]
-            self.accuracy =tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name="Accuracy") # shape=()
+
 
     def instantiate_weights(self):
         """define all weights here"""
@@ -156,7 +151,7 @@ class TextCNN:
             #output: A 1-D `Tensor` of length `batch_size` of the same type as `logits` with the softmax cross entropy loss.
             #input_y:shape=(?, 1999); logits:shape=(?, 1999)
             # let `x = logits`, `z = labels`.  The logistic loss is:z * -log(sigmoid(x)) + (1 - z) * -log(1 - sigmoid(x))
-            losses = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.input_y_multilabel, logits=self.logits);#losses=tf.nn.softmax_cross_entropy_with_logits(labels=self.input__y,logits=self.logits)
+            losses = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.input_y, logits=self.logits);#losses=tf.nn.softmax_cross_entropy_with_logits(labels=self.input__y,logits=self.logits)
             #losses=-self.input_y_multilabel*tf.log(self.logits)-(1-self.input_y_multilabel)*tf.log(1-self.logits)
             print("sigmoid_cross_entropy_with_logits.losses:", losses) #shape=(?, 1999).
             losses = tf.reduce_sum(losses,axis=1) #shape=(?,). loss for all data in the batch
@@ -210,7 +205,7 @@ def test():
            input_x[input_x <0] = 0
            input_y_multilabel=get_label_y(input_x)
            loss,possibility,W_projection_value,_=sess.run([textRNN.loss_val,textRNN.possibility,textRNN.W_projection,textRNN.train_op],
-                                                    feed_dict={textRNN.input_x:input_x,textRNN.input_y_multilabel:input_y_multilabel,
+                                                    feed_dict={textRNN.input_x:input_x,textRNN.input_y:input_y_multilabel,
                                                                textRNN.dropout_keep_prob:dropout_keep_prob,textRNN.tst:False})
            print(i,"loss:",loss,"-------------------------------------------------------")
            print("label:",input_y_multilabel);#print("possibility:",possibility)
