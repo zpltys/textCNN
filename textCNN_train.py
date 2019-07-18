@@ -46,7 +46,7 @@ def main(_):
         saver = tf.train.Saver()
         if os.path.exists(util.modelPath + "checkpoint"):
             print("Restoring Variables from Checkpoint.")
-            saver.restore(sess, tf.train.latest_checkpoint(FLAGS.ckpt_dir))
+            saver.restore(sess, tf.train.latest_checkpoint(util.modelPath))
         else:
             print('Initializing Variables')
             sess.run(tf.global_variables_initializer())
@@ -73,11 +73,11 @@ def main(_):
                     print("Epoch %d\tBatch %d\tTrain Loss:%.3f\tLearning rate:%.5f" % (epoch, counter, loss / float(counter), lr))
 
                 ########################################################################################################
-                if start%(3000*FLAGS.batch_size)==0: # eval every 3000 steps.
-                    eval_loss, f1_score,f1_micro,f1_macro = do_eval(sess, textCNN, vaildX, vaildY,num_classes)
-                    print("Epoch %d Validation Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (epoch, eval_loss, f1_score,f1_micro,f1_macro))
+                if start % (3000*FLAGS.batch_size) == 0:
+                    eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, vaildX, vaildY, 15)
+                    print("Epoch %d Validation Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (epoch, eval_loss, f1_score, f1_micro, f1_macro))
                     # save model to checkpoint
-                    save_path = FLAGS.ckpt_dir + "model.ckpt"
+                    save_path = util.modelPath + "model.ckpt"
                     print("Going to save model..")
                     saver.save(sess, save_path, global_step=epoch)
                 ########################################################################################################
@@ -88,14 +88,14 @@ def main(_):
             # 4.validation
             print(epoch,FLAGS.validate_every,(epoch % FLAGS.validate_every==0))
             if epoch % FLAGS.validate_every==0:
-                eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, num_classes)
+                eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, 15)
                 print("Epoch %d Validation Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (epoch,eval_loss,f1_score,f1_micro,f1_macro))
                 #save model to checkpoint
                 save_path = util.modelPath + "model.ckpt"
                 saver.save(sess, save_path, global_step=epoch)
 
         # 5.最后在测试集上做测试，并报告测试准确率 Test
-        test_loss,f1_score,f1_micro,f1_macro = do_eval(sess, textCNN, testX, testY,num_classes)
+        test_loss,f1_score,f1_micro,f1_macro = do_eval(sess, textCNN, testX, testY, 15)
         print("Test Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % ( test_loss,f1_score,f1_micro,f1_macro))
     pass
 
@@ -111,7 +111,7 @@ def do_eval(sess, textCNN, evalX, evalY, num_classes):
 
     for start, end in zip(range(0, number_examples, batch_size), range(batch_size, number_examples, batch_size)):
         ''' evaluation in one batch '''
-        feed_dict = {textCNN.input_x: evalX[start:end], textCNN.input_y_multilabel: evalY[start:end], textCNN.dropout_keep_prob: 1.0,
+        feed_dict = {textCNN.input_x: evalX[start:end], textCNN.input_y: evalY[start:end], textCNN.dropout_keep_prob: 1.0,
                      textCNN.is_training_flag: False}
         current_eval_loss, logits = sess.run(
             [textCNN.loss_val, textCNN.logits], feed_dict)
@@ -145,7 +145,7 @@ def fastF1(result, predict):
         p += P
         r += R
         f1 = (2 * P * R) / (P + R) if (P + R) else 0
-        print(id2rela[trueValue], P, R, f1)
+        print(recallNum, P, R, f1)
         total_list.append([P, R, f1])
     p /= 6
     r /= 6
