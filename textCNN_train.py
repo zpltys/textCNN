@@ -6,6 +6,7 @@ import h5py
 import os
 import gensim
 import util
+from sklearn import metrics
 
 FLAGS = tf.flags.FLAGS
 
@@ -96,7 +97,9 @@ def main(_):
         # 5.最后在测试集上做测试，并报告测试准确率 Test
         test_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, 15, False)
         print("Test Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (test_loss, f1_score, f1_micro, f1_macro))
-    pass
+
+    writer = tf.summary.FileWriter("../log/textCNN.log", sess.graph)
+    writer.close()
 
 
 # 在验证集上做验证，报告损失、精确度
@@ -105,7 +108,7 @@ def do_eval(sess, textCNN, evalX, evalY, num_classes, valid=True):
         evalX = evalX[0:3000]
         evalY = evalY[0:3000]
     number_examples = len(evalX)
-    eval_loss, eval_counter, eval_f1_score, eval_p, eval_r = 0.0, 0, 0.0, 0.0, 0.0
+    eval_loss, eval_counter= 0.0, 0
     batch_size = FLAGS.batch_size
     predict = []
 
@@ -119,50 +122,35 @@ def do_eval(sess, textCNN, evalX, evalY, num_classes, valid=True):
         eval_loss += current_eval_loss
         eval_counter += 1
 
-    _, _, f1_macro, f1_micro, _ = fastF1(predict, evalY, num_classes)
-    f1_score = (f1_micro+f1_macro)/2.0
-    return eval_loss/float(eval_counter), f1_score, f1_micro, f1_macro
+    y_predict = [findMaxindex(y) for y in predict]
+    y_true = [findMaxindex(y) for y in evalY]
+
+    precision_macro = metrics.precision_score(y_true, y_predict, average='macro')
+    precision_micro = metrics.precision_score(y_true, y_predict, average='micro')
+    precision = (precision_macro + precision_micro) / 2.0
+
+    recall_macro = metrics.recall_score(y_true, y_predict, average='macro')
+    recall_micro = metrics.recall_score(y_true, y_predict, average='micro')
+    recall = (recall_macro + recall_micro) / 2.0
+
+    f1_macro = 2 * precision_macro * recall_macro / (precision_macro + recall_macro)
+    f1_micro = 2 * precision_micro * recall_micro / (precision_micro + recall_micro)
+    f1 = (f1_micro + f1_macro) / 2.0
+
+    print("precision:", precision, " precision_macro:", precision_macro, " precision_micro:", precision_micro)
+    print("recall:", recall, " recall_macro:", recall_macro, " recall_micro:", recall_micro)
+
+    return eval_loss/float(eval_counter), f1, f1_micro, f1_macro
 
 
-def fastF1(predict, result, num_classes):
-    ''' f1 score '''
-    true_total, r_total, p_total, p, r = 0.0, 0.0, 0.0, 0.0, 0.0
-    total_list = []
-    print("type(result):", type(result))
-    print(result[0])
-
-    #print("type(predict):", type(predict))
-    #print(predict)
-
-    for trueValue in range(num_classes):
-        trueNum, recallNum, precisionNum = 0, 0, 0
-        for index, values in enumerate(result):
-            if values == trueValue:
-                recallNum += 1
-                if values == predict[index]:
-                    trueNum += 1
-            if predict[index] == trueValue:
-                precisionNum += 1
-        R = 1.0 * trueNum / recallNum if recallNum else 0
-        P = 1.0 * trueNum / precisionNum if precisionNum else 0
-        true_total += trueNum
-        r_total += recallNum
-        p_total += precisionNum
-        p += P
-        r += R
-        f1 = (2 * P * R) / (P + R) if (P + R) else 0
-        print(recallNum, P, R, f1)
-        total_list.append([P, R, f1])
-    p /= num_classes
-    r /= num_classes
-    micro_r = true_total / r_total
-    micro_p = true_total / p_total
-    macro_f1 = (2 * p * r) / (p + r) if (p + r) else 0
-    micro_f1 = (2 * micro_p * micro_r) / (micro_p +
-                                          micro_r) if (micro_p + micro_r) else 0
-    print('P: {:.2f}%, R: {:.2f}%, Micro_f1: {:.2f}%, Macro_f1: {:.2f}%'.format(
-        p*100, r*100, micro_f1 * 100, macro_f1*100))
-    return p, r, macro_f1, micro_f1, total_list
+def findMaxindex(array):
+    ans = 0
+    val = array[0]
+    for i in range(1, len(array)):
+        if val < array[i]:
+            val = array[i]
+            ans = i
+    return ans
 
 
 def assign_pretrained_word_embedding(sess, index2word, vocab_size, textCNN, word2vec_model_path=util.modelPath+'word2vec.model'):
