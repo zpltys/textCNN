@@ -52,7 +52,6 @@ def extraSourceFile():
             count += 1
             if count % 10000 == 0:
                 print(count)
-                break
 
     return labels, words, labelMap, word2index, oriwords
 
