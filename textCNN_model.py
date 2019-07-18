@@ -63,8 +63,6 @@ class TextCNN:
         h = self.cnn_single_layer()
         with tf.name_scope("output"):
             logits = tf.matmul(h, self.W_projection) + self.b_projection
-            #shape:[None, self.num_classes]==tf.matmul([None,self.embed_size],[self.embed_size,self.num_classes])
-            print("logits shape:", logits.shape)
         return logits
 
     def cnn_single_layer(self):

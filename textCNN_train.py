@@ -115,7 +115,8 @@ def do_eval(sess, textCNN, evalX, evalY, num_classes):
                      textCNN.is_training_flag: False}
         current_eval_loss, logits = sess.run(
             [textCNN.loss_val, textCNN.logits], feed_dict)
-        predict += logits
+        print("type(logits):", type(logits))
+        predict += list(logits)
         eval_loss += current_eval_loss
         eval_counter += 1
 
@@ -158,8 +159,6 @@ def fastF1(result, predict):
         p*100, r*100, micro_f1 * 100, macro_f1*100))
     return p, r, macro_f1, micro_f1, total_list
 
-
-#word2index: '' : 0
 
 def assign_pretrained_word_embedding(sess, index2word, vocab_size, textCNN, word2vec_model_path=util.modelPath+'word2vec.model'):
     print("using pre-trained word emebedding word2vec_model_path:", word2vec_model_path)
