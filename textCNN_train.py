@@ -129,7 +129,7 @@ def fastF1(predict, result, num_classes):
     true_total, r_total, p_total, p, r = 0.0, 0.0, 0.0, 0.0, 0.0
     total_list = []
     print("type(result):", type(result))
-    print(result)
+    print(result[0])
 
     #print("type(predict):", type(predict))
     #print(predict)
