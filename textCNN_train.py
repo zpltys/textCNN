@@ -26,7 +26,7 @@ filter_sizes = [5, 6, 7]
 
 
 #1.load data(X:list of lint,y:int). 2.create session. 3.feed data. 4.training (5.validation) ,(6.prediction)
-def main():
+def main(_):
     word2index, trainX, trainY, vaildX, vaildY, testX, testY = load_data(util.dataPath + 'TrainTest.h5py', util.dataPath + 'word2index.pickle')
     vocab_size = len(word2index)
     print("cnn_model.vocab_size:", vocab_size)
