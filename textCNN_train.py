@@ -115,7 +115,7 @@ def do_eval(sess, textCNN, evalX, evalY, num_classes):
                      textCNN.is_training_flag: False}
         current_eval_loss, logits = sess.run(
             [textCNN.loss_val, textCNN.logits], feed_dict)
-        predict += logits[0]
+        predict += logits
         eval_loss += current_eval_loss
         eval_counter += 1
 
