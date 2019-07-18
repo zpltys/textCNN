@@ -30,6 +30,8 @@ def extraSourceFile():
     labelMap = {}
     word2index = {'': 0}
     count = 0
+
+    oriwords = []
     with open(util.sourceFile, encoding='utf8') as source:
         for line in source:
             s = line.split('_!_')
@@ -42,6 +44,8 @@ def extraSourceFile():
 
             title = re.sub(r1, ' ', s[3])
             title = split_word(title)
+            oriwords.append(title)
+
             sentence = sentence_transform(word2index, title)
             words.append(sentence)
 
@@ -49,7 +53,7 @@ def extraSourceFile():
             if count % 10000 == 0:
                 print(count)
 
-    return labels, words, labelMap, word2index
+    return labels, words, labelMap, word2index, oriwords
 
 def model_train(sentences, save_model_name='word2vec'):
     # 训练skip-gram模型;
@@ -104,7 +108,10 @@ def dumpMessage(trainX, trainY, testX, testY, validX, validY, word2index):
     pickleFile.close()
 
 if __name__ == '__main__':
-    labels, words, labelMap, word2index = extraSourceFile()
+    labels, words, labelMap, word2index, oriwords = extraSourceFile()
+    print(oriwords[0:10])
+    model_train(oriwords)
+
     trainX, trainY, testX, testY, validX, validY = sampleSplit(labels, words)
 
     print('trainX size:', len(trainX))
@@ -117,6 +124,3 @@ if __name__ == '__main__':
     print('validY size:', len(validY))
 
     dumpMessage(trainX, trainY, testX, testY, validX, validY, word2index)
-
-
-    #model_train(words)
