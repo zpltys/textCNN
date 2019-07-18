@@ -31,6 +31,7 @@ def main(_):
     vocab_size = len(word2index)
     print("cnn_model.vocab_size:", vocab_size)
 
+    print(type(trainX))
     num_examples, FLAGS.sentence_len = trainX.shape
     print("num_examples of training:", num_examples, " ;sentence_len:", FLAGS.sentence_len)
 
@@ -196,7 +197,7 @@ def assign_pretrained_word_embedding(sess, index2word, vocab_size, textCNN, word
 
 def load_data(cacheH5py, cachePickle):
     h5Data = h5py.File(cacheH5py, 'r')
-    print("f_data.keys:",list(h5Data.keys()))
+    print("f_data.keys:", list(h5Data.keys()))
     train_X = h5Data['train_X']
     print("train_X.shape:", train_X.shape)
     train_Y = h5Data['train_Y']
@@ -210,6 +211,7 @@ def load_data(cacheH5py, cachePickle):
     word2index = None
     with open(cachePickle, 'rb') as data_f_pickle:
         word2index = pickle.load(data_f_pickle)
+
     return word2index, train_X, train_Y, vaild_X, valid_Y, test_X, test_Y
 
 
