@@ -52,6 +52,7 @@ def extraSourceFile():
             count += 1
             if count % 10000 == 0:
                 print(count)
+                break
 
     return labels, words, labelMap, word2index, oriwords
 
@@ -78,14 +79,14 @@ def sentence_transform(word2index, sentence):
 def sampleSplit(labels, words):
     length = len(labels)
     rand = np.random.random(length)
-    trainX = [words[i] for i in range(length) if rand[i] <= 0.7]
-    trainY = [labels[i] for i in range(length) if rand[i] <= 0.7]
+    trainX = np.array([words[i] for i in range(length) if rand[i] <= 0.7])
+    trainY = np.array([labels[i] for i in range(length) if rand[i] <= 0.7])
 
-    testX = [words[i] for i in range(length) if 0.7 < rand[i] <= 0.85]
-    testY = [labels[i] for i in range(length) if 0.7 < rand[i] <= 0.85]
+    testX = np.array([words[i] for i in range(length) if 0.7 < rand[i] <= 0.85])
+    testY = np.array([labels[i] for i in range(length) if 0.7 < rand[i] <= 0.85])
 
-    validX = [words[i] for i in range(length) if 0.85 < rand[i]]
-    validY = [labels[i] for i in range(length) if 0.85 < rand[i]]
+    validX = np.array([words[i] for i in range(length) if 0.85 < rand[i]])
+    validY = np.array([labels[i] for i in range(length) if 0.85 < rand[i]])
 
     return trainX, trainY, testX, testY, validX, validY
 
@@ -109,8 +110,8 @@ def dumpMessage(trainX, trainY, testX, testY, validX, validY, word2index):
 
 if __name__ == '__main__':
     labels, words, labelMap, word2index, oriwords = extraSourceFile()
-    print(oriwords[0:10])
-    model_train(oriwords)
+    #print(oriwords[0:10])
+    #model_train(oriwords)
 
     trainX, trainY, testX, testY, validX, validY = sampleSplit(labels, words)
 
