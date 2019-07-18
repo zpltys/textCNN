@@ -5,7 +5,6 @@ import pickle
 import h5py
 import os
 import gensim
-from numba import jit
 import util
 
 FLAGS = tf.flags.FLAGS
@@ -124,10 +123,10 @@ def do_eval(sess, textCNN, evalX, evalY, num_classes):
     f1_score = (f1_micro+f1_macro)/2.0
     return eval_loss/float(eval_counter), f1_score, f1_micro, f1_macro
 
-@jit
+
 def fastF1(result, predict):
     ''' f1 score '''
-    true_total, r_total, p_total, p, r = 0, 0, 0, 0, 0
+    true_total, r_total, p_total, p, r = 0.0, 0.0, 0.0, 0.0, 0.0
     total_list = []
     for trueValue in range(6):
         trueNum, recallNum, precisionNum = 0, 0, 0
@@ -138,8 +137,8 @@ def fastF1(result, predict):
                     trueNum += 1
             if predict[index] == trueValue:
                 precisionNum += 1
-        R = trueNum / recallNum if recallNum else 0
-        P = trueNum / precisionNum if precisionNum else 0
+        R = 1.0 * trueNum / recallNum if recallNum else 0
+        P = 1.0 * trueNum / precisionNum if precisionNum else 0
         true_total += trueNum
         r_total += recallNum
         p_total += precisionNum
