@@ -94,14 +94,14 @@ def sampleSplit(labels, words):
 def dumpMessage(trainX, trainY, testX, testY, validX, validY, word2index):
     h5File = h5py.File(util.dataPath + 'TrainTest.h5py', 'w')
 
-    h5File.create_dataset('train_X', trainX)
-    h5File.create_dataset('train_Y', trainY)
+    h5File.create_dataset('train_X', data=trainX)
+    h5File.create_dataset('train_Y', data=trainY)
 
-    h5File.create_dataset('valid_X', validX)
-    h5File.create_dataset('valid_Y', validY)
+    h5File.create_dataset('valid_X', data=validX)
+    h5File.create_dataset('valid_Y', data=validY)
 
-    h5File.create_dataset('test_X', testX)
-    h5File.create_dataset('test_Y', testY)
+    h5File.create_dataset('test_X', data=testX)
+    h5File.create_dataset('test_Y', data=testY)
     h5File.close()
 
     pickleFile = open(util.dataPath + 'word2index.pickle', 'wb+')
