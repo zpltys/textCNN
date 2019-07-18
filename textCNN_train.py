@@ -113,7 +113,8 @@ def do_eval(sess, textCNN, evalX, evalY, num_classes, valid=True):
     predict = []
 
     for start, end in zip(range(0, number_examples, batch_size), range(batch_size, number_examples, batch_size)):
-        ''' evaluation in one batch '''
+        if end + batch_size > number_examples:
+            end += batch_size
         feed_dict = {textCNN.input_x: evalX[start:end], textCNN.input_y: evalY[start:end], textCNN.dropout_keep_prob: 1.0,
                      textCNN.is_training_flag: False}
         current_eval_loss, logits = sess.run(
