@@ -101,8 +101,8 @@ def main(_):
 
 # 在验证集上做验证，报告损失、精确度
 def do_eval(sess, textCNN, evalX, evalY, num_classes):
-    evalX = evalX[0:3000]
-    evalY = evalY[0:3000]
+    #evalX = evalX[0:3000]
+    #evalY = evalY[0:3000]
     number_examples = len(evalX)
     eval_loss, eval_counter, eval_f1_score, eval_p, eval_r = 0.0, 0, 0.0, 0.0, 0.0
     batch_size = FLAGS.batch_size
@@ -114,7 +114,6 @@ def do_eval(sess, textCNN, evalX, evalY, num_classes):
                      textCNN.is_training_flag: False}
         current_eval_loss, logits = sess.run(
             [textCNN.loss_val, textCNN.logits], feed_dict)
-        print("type(logits):", type(logits))
         predict += list(logits)
         eval_loss += current_eval_loss
         eval_counter += 1
@@ -124,11 +123,17 @@ def do_eval(sess, textCNN, evalX, evalY, num_classes):
     return eval_loss/float(eval_counter), f1_score, f1_micro, f1_macro
 
 
-def fastF1(result, predict):
+def fastF1(predict, result):
     ''' f1 score '''
     true_total, r_total, p_total, p, r = 0.0, 0.0, 0.0, 0.0, 0.0
     total_list = []
-    for trueValue in range(6):
+    print("type(result):", type(result))
+    print(result)
+
+    print("type(predict):", type(predict))
+    print(predict)
+
+    for trueValue in range(15):
         trueNum, recallNum, precisionNum = 0, 0, 0
         for index, values in enumerate(result):
             if values == trueValue:
@@ -147,8 +152,8 @@ def fastF1(result, predict):
         f1 = (2 * P * R) / (P + R) if (P + R) else 0
         print(recallNum, P, R, f1)
         total_list.append([P, R, f1])
-    p /= 6
-    r /= 6
+    p /= 15
+    r /= 15
     micro_r = true_total / r_total
     micro_p = true_total / p_total
     macro_f1 = (2 * p * r) / (p + r) if (p + r) else 0
