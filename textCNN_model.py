@@ -64,6 +64,7 @@ class TextCNN:
         with tf.name_scope("output"):
             logits = tf.matmul(h, self.W_projection) + self.b_projection
             #shape:[None, self.num_classes]==tf.matmul([None,self.embed_size],[self.embed_size,self.num_classes])
+            print("logits shape:", logits.shape)
         return logits
 
     def cnn_single_layer(self):
@@ -208,7 +209,7 @@ def test():
                                                     feed_dict={textRNN.input_x:input_x,textRNN.input_y:input_y_multilabel,
                                                                textRNN.dropout_keep_prob:dropout_keep_prob,textRNN.tst:False})
            print(i,"loss:",loss,"-------------------------------------------------------")
-           print("label:",input_y_multilabel);#print("possibility:",possibility)
+           print("label:",input_y_multilabel)
 
 def get_label_y(input_x):
     length=input_x.shape[0]

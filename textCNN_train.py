@@ -86,8 +86,8 @@ def main(_):
             sess.run(textCNN.epoch_increment)
 
             # 4.validation
-            print(epoch,FLAGS.validate_every,(epoch % FLAGS.validate_every==0))
-            if epoch % FLAGS.validate_every==0:
+            print(epoch, FLAGS.validate_every, (epoch % FLAGS.validate_every == 0))
+            if epoch % FLAGS.validate_every == 0:
                 eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, 15)
                 print("Epoch %d Validation Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (epoch,eval_loss,f1_score,f1_micro,f1_macro))
                 #save model to checkpoint
@@ -95,8 +95,8 @@ def main(_):
                 saver.save(sess, save_path, global_step=epoch)
 
         # 5.最后在测试集上做测试，并报告测试准确率 Test
-        test_loss,f1_score,f1_micro,f1_macro = do_eval(sess, textCNN, testX, testY, 15)
-        print("Test Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % ( test_loss,f1_score,f1_micro,f1_macro))
+        test_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, 15)
+        print("Test Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (test_loss, f1_score, f1_micro, f1_macro))
     pass
 
 
