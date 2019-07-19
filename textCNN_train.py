@@ -55,7 +55,7 @@ def main(_):
             print('Initializing Variables')
             sess.run(tf.global_variables_initializer())
             index2word = {v: k for k, v in word2index.items()}
-            assign_pretrained_word_embedding(sess, index2word, vocab_size, textCNN)
+            assign_pretrained_word_embedding(sess, index2word, vocab_size, textCNN, FLAGS)
 
         curr_epoch = sess.run(textCNN.epoch_step)
         #3.feed data & training
@@ -146,7 +146,7 @@ def findMaxindex(array):
     return ans
 
 
-def assign_pretrained_word_embedding(sess, index2word, vocab_size, textCNN, word2vec_model_path=util.modelPath+'word2vec.model'):
+def assign_pretrained_word_embedding(sess, index2word, vocab_size, textCNN, word2vec_model_path=util.modelPath+'word2vec.model', FLAGS=None):
     print("using pre-trained word emebedding word2vec_model_path:", word2vec_model_path)
     wv = gensim.models.KeyedVectors.load(word2vec_model_path)
 
