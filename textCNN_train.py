@@ -71,11 +71,10 @@ def main(_):
                 feed_dict = {textCNN.input_x: trainX[start:end], textCNN.dropout_keep_prob: 0.8,
                              textCNN.is_training_flag: FLAGS.is_training_flag, textCNN.input_y: trainY[start:end]}
 
-                curr_loss, lr, _ = sess.run([textCNN.loss_val, textCNN.learning_rate, textCNN.train_op], feed_dict)
+                curr_loss, lr, _, gp = sess.run([textCNN.loss_val, textCNN.learning_rate, textCNN.train_op, textCNN.global_step], feed_dict)
                 loss, counter = loss+curr_loss, counter+1
                 if counter % 50 == 0:
-                    print("Epoch %d\tBatch %d\tTrain Loss:%.3f\tLearning rate:%.5f" % (epoch, counter, loss / float(counter), lr))
-
+                    print("Epoch %d\tBatch %d\t global_step: %d\tTrain Loss:%.3f\tLearning rate:%.5f" % (epoch, counter, gp, loss / float(counter), lr))
 
             sess.run(textCNN.epoch_increment)
             # 4.validation

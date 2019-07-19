@@ -13,7 +13,7 @@ class TextCNN:
         self.sequence_length = sequence_length
         self.vocab_size = vocab_size
         self.embed_size = embed_size
-        self.learning_rate = tf.Variable(learning_rate, trainable=False, name="learning_rate", dtype=tf.float32)#ADD learning_rate
+        self.learning_rate = tf.Variable(learning_rate, trainable=False, name="learning_rate", dtype=tf.float32)
         self.learning_rate_decay_half_op = tf.assign(self.learning_rate, self.learning_rate * decay_rate_big)
         self.filter_sizes = filter_sizes
         self.num_filters = num_filters
@@ -140,11 +140,15 @@ class TextCNN:
             loss = loss+l2_losses
         return loss
 
-
-
     def train(self):
+        self.learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step, self.decay_steps,
+                                                   self.decay_rate, staircase=False)
+        train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss_val, global_step=self.global_step)
+        return train_op
+
+    def train_old(self):
         """based on the loss, use SGD to update parameter"""
-        learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step, self.decay_steps, self.decay_rate, staircase=True)
+        learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step, self.decay_steps, self.decay_rate, staircase=False)
         self.learning_rate_ = learning_rate
         optimizer = tf.train.AdamOptimizer(learning_rate)
         gradients, variables = zip(*optimizer.compute_gradients(self.loss_val))
