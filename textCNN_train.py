@@ -146,7 +146,7 @@ def findMaxindex(array):
     return ans
 
 
-def assign_pretrained_word_embedding(sess, index2word, vocab_size, textCNN, word2vec_model_path=util.modelPath+'word2vec.model', FLAGS=None):
+def assign_pretrained_word_embedding(sess, index2word, vocab_size, textCNN, FLAGS=None, word2vec_model_path=util.modelPath+'word2vec.model'):
     print("using pre-trained word emebedding word2vec_model_path:", word2vec_model_path)
     wv = gensim.models.KeyedVectors.load(word2vec_model_path)
 
