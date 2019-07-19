@@ -114,10 +114,9 @@ class TextCNN:
                 h2 = tf.nn.relu(tf.nn.bias_add(conv2, b2), "relu2")
 
                 # 3. Max-pooling
-                pooling_max = tf.squeeze(tf.nn.max_pool(h2, ksize=[1, self.sequence_length, 1, 1], strides=[1, 1, 1, 1], padding='VALID', name="pool"))
-                # pooling_avg=tf.squeeze(tf.reduce_mean(h,axis=1)) #[batch_size,num_filters]
+                pooling_max = tf.nn.max_pool(h2, ksize=[1, self.sequence_length, 1, 1], strides=[1, 1, 1, 1], padding='VALID', name="pool")
                 print(i, "pooling shape:", pooling_max.shape)
-                # pooling=tf.concat([pooling_max,pooling_avg],axis=1) #[batch_size,num_filters*2]
+                pooling_max = tf.squeeze(pooling_max)
                 pooled_outputs.append(pooling_max)  # h:[batch_size,sequence_length,1,num_filters]
         # concat
         h = tf.concat(pooled_outputs, axis=1)  # [batch_size,num_filters*len(self.filter_sizes)]
