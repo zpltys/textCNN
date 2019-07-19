@@ -41,7 +41,7 @@ class TextCNN:
         self.logits = self.inference()
         self.possibility = tf.nn.sigmoid(self.logits)
 
-        self.loss_val = self.loss_multilabel()
+        self.loss_val = self.loss()
         self.train_op = self.train()
 
 
@@ -130,14 +130,14 @@ class TextCNN:
         h = tf.layers.dense(h, self.num_filters_total, activation=tf.nn.tanh, use_bias=True)
         return h
 
-    def loss_multilabel(self, l2_lambda=0.0001): #0.0001#this loss function is for multi-label classification
+    def loss(self, l2_lambda=0.0001): #0.0001#this loss function is for multi-label classification
         with tf.name_scope("loss"):
             losses = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.input_y, logits=self.logits)
             print("sigmoid_cross_entropy_with_logits.losses:", losses)
             losses = tf.reduce_sum(losses,axis=1)
             loss = tf.reduce_mean(losses)
             l2_losses = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name]) * l2_lambda
-            loss = loss+l2_losses
+            loss = loss + l2_losses
         return loss
 
     def train(self):
@@ -148,7 +148,7 @@ class TextCNN:
 
     def train_old(self):
         """based on the loss, use SGD to update parameter"""
-        learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step, self.decay_steps, self.decay_rate, staircase=False)
+        learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step, self.decay_steps, self.decay_rate, staircase=True)
         self.learning_rate_ = learning_rate
         optimizer = tf.train.AdamOptimizer(learning_rate)
         gradients, variables = zip(*optimizer.compute_gradients(self.loss_val))
