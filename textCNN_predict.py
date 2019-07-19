@@ -32,7 +32,7 @@ def main(_):
         else:
             print('no checkpoint file in ', util.modelPath)
 
-        test_loss, f1_score, f1_micro, f1_macro = textCNN_train.do_eval(sess, textCNN, testX, testY, 15, False)
+        test_loss, f1_score, f1_micro, f1_macro = textCNN_train.do_eval(sess, textCNN, testX, testY, FLAGS, False)
         print("Test Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (test_loss, f1_score, f1_micro, f1_macro))
 
 

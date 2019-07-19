@@ -78,7 +78,7 @@ def main(_):
 
                 ########################################################################################################
                 if start % (3000*FLAGS.batch_size) == 0:
-                    eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, vaildX, vaildY, 15)
+                    eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, vaildX, vaildY, FLAGS)
                     print("Epoch %d Validation Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (epoch, eval_loss, f1_score, f1_micro, f1_macro))
                     # save model to checkpoint
                     save_path = util.modelPath + "model.ckpt"
@@ -92,14 +92,14 @@ def main(_):
             # 4.validation
             print(epoch, FLAGS.validate_every, (epoch % FLAGS.validate_every == 0))
             if epoch % FLAGS.validate_every == 0:
-                eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, 15)
+                eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, FLAGS)
                 print("Epoch %d Validation Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (epoch,eval_loss,f1_score,f1_micro,f1_macro))
                 #save model to checkpoint
                 save_path = util.modelPath + "model.ckpt"
                 saver.save(sess, save_path, global_step=epoch)
 
         # 5.最后在测试集上做测试，并报告测试准确率 Test
-        test_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, 15, False)
+        test_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, FLAGS, False)
         print("Test Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (test_loss, f1_score, f1_micro, f1_macro))
 
     writer = tf.summary.FileWriter("../log/textCNN.log", sess.graph)
@@ -107,7 +107,7 @@ def main(_):
 
 
 # 在验证集上做验证，报告损失、精确度
-def do_eval(sess, textCNN, evalX, evalY, num_classes, valid=True):
+def do_eval(sess, textCNN, evalX, evalY, FLAGS, valid=True):
     if valid:
         evalX = evalX[0:3000]
         evalY = evalY[0:3000]
