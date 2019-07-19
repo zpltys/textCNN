@@ -5,7 +5,7 @@ import numpy as np
 
 class TextCNN:
     def __init__(self, filter_sizes, num_filters, num_classes, learning_rate, batch_size, decay_steps, decay_rate, sequence_length,vocab_size, embed_size,
-                 initializer=tf.random_normal_initializer(stddev=0.1), clip_gradients=5.0, decay_rate_big=0.50):
+                 initializer=tf.random_normal_initializer(stddev=0.1), clip_gradients=5.0, decay_rate_big=0.50, use_mulitple_layer_cnn=False):
         """init all hyperparameter here"""
         # set hyperparamter
         self.num_classes = num_classes
@@ -18,7 +18,7 @@ class TextCNN:
         self.filter_sizes = filter_sizes
         self.num_filters = num_filters
         self.initializer = initializer
-        self.num_filters_total = self.num_filters * len(filter_sizes) #how many filters totally.
+        self.num_filters_total = self.num_filters * len(filter_sizes)
         self.clip_gradients = clip_gradients
         self.is_training_flag = tf.placeholder(tf.bool, name="is_training_flag")
 
@@ -28,7 +28,7 @@ class TextCNN:
         self.dropout_keep_prob = tf.placeholder(tf.float32,name="dropout_keep_prob")
         self.iter = tf.placeholder(tf.int32) #training iteration
         self.tst = tf.placeholder(tf.bool)
-        self.use_mulitple_layer_cnn = False
+        self.use_mulitple_layer_cnn = use_mulitple_layer_cnn
 
         self.global_step = tf.Variable(0, trainable=False, name="Global_Step")
         self.epoch_step = tf.Variable(0, trainable=False, name="Epoch_Step")
@@ -38,7 +38,7 @@ class TextCNN:
         self.decay_steps, self.decay_rate = decay_steps, decay_rate
 
         self.instantiate_weights()
-        self.logits = self.inference() #[None, self.label_size]. main computation graph is here.
+        self.logits = self.inference()
         self.possibility = tf.nn.sigmoid(self.logits)
 
         self.loss_val = self.loss_multilabel()
@@ -57,10 +57,14 @@ class TextCNN:
         # 1.=====>get emebedding of words in the sentence
         self.embedded_words = tf.nn.embedding_lookup(self.Embedding, self.input_x)#[None,sentence_length,embed_size]
         self.sentence_embeddings_expanded = tf.expand_dims(self.embedded_words, -1)
-        #[None,sentence_length,embed_size,1). expand dimension so meet input requirement of 2d-conv
 
-        print("use single layer CNN")
-        h = self.cnn_single_layer()
+        if self.use_mulitple_layer_cnn:
+            print("use single layer CNN")
+            h = self.cnn_multiple_layers()
+        else:
+            print("use single layer CNN")
+            h = self.cnn_single_layer()
+
         with tf.name_scope("output"):
             logits = tf.matmul(h, self.W_projection) + self.b_projection
         return logits
@@ -68,70 +72,49 @@ class TextCNN:
     def cnn_single_layer(self):
         pooled_outputs = []
         for i, filter_size in enumerate(self.filter_sizes):
-            # with tf.name_scope("convolution-pooling-%s" %filter_size):
             with tf.variable_scope("convolution-pooling-%s" % filter_size):
-                # ====>a.create filter
                 filter = tf.get_variable("filter-%s" % filter_size, [filter_size, self.embed_size, 1, self.num_filters], initializer=self.initializer)
-                # ====>b.conv operation: conv2d===>computes a 2-D convolution given 4-D `input` and `filter` tensors.
-                # Conv.Input: given an input tensor of shape `[batch, in_height, in_width, in_channels]` and
-                # a filter / kernel tensor of shape `[filter_height, filter_width, in_channels, out_channels]`
-                # Conv.Returns: A `Tensor`. Has the same type as `input`.
-                #         A 4-D tensor. The dimension order is determined by the value of `data_format`, see below for details.
-                # 1)each filter with conv2d's output a shape:[1,sequence_length-filter_size+1,1,1];2)*num_filters--->[1,sequence_length-filter_size+1,1,num_filters];3)*batch_size--->[batch_size,sequence_length-filter_size+1,1,num_filters]
-                # input data format:NHWC:[batch, height, width, channels];output:4-D
-                conv = tf.nn.conv2d(self.sentence_embeddings_expanded, filter, strides=[1, 1, 1, 1], padding="VALID",name="conv")
-                # shape:[batch_size,sequence_length - filter_size + 1,1,num_filters]
+                conv = tf.nn.conv2d(self.sentence_embeddings_expanded, filter, strides=[1, 1, 1, 1], padding="VALID", name="conv")
                 conv = tf.contrib.layers.batch_norm(conv, is_training=self.is_training_flag, scope='cnn_bn_')
 
-                # ====>c. apply nolinearity
-                b = tf.get_variable("b-%s" % filter_size, [self.num_filters])  # ADD 2017-06-09
-                h = tf.nn.relu(tf.nn.bias_add(conv, b),"relu")  # shape:[batch_size,sequence_length - filter_size + 1,1,num_filters]. tf.nn.bias_add:adds `bias` to `value`
-                # ====>. max-pooling.  value: A 4-D `Tensor` with shape `[batch, height, width, channels]
-                #                  ksize: A list of ints that has length >= 4.  The size of the window for each dimension of the input tensor.
-                #                  strides: A list of ints that has length >= 4.  The stride of the sliding window for each dimension of the input tensor.
-                pooled = tf.nn.max_pool(h, ksize=[1, self.sequence_length - filter_size + 1, 1, 1],strides=[1, 1, 1, 1], padding='VALID',name="pool")
-                # shape:[batch_size, 1, 1, num_filters].max_pool:performs the max pooling on the input.
+                b = tf.get_variable("b-%s" % filter_size, [self.num_filters])
+                h = tf.nn.relu(tf.nn.bias_add(conv, b), "relu")
+                pooled = tf.nn.max_pool(h, ksize=[1, self.sequence_length - filter_size + 1, 1, 1],
+                                        strides=[1, 1, 1, 1], padding='VALID',name="pool")
                 pooled_outputs.append(pooled)
-        # 3.=====>combine all pooled features, and flatten the feature.output' shape is a [1,None]
-        # e.g. >>> x1=tf.ones([3,3]);x2=tf.ones([3,3]);x=[x1,x2]
-        #         x12_0=tf.concat(x,0)---->x12_0' shape:[6,3]
-        #         x12_1=tf.concat(x,1)---->x12_1' shape;[3,6]
-        self.h_pool = tf.concat(pooled_outputs,3)  # shape:[batch_size, 1, 1, num_filters_total]. tf.concat=>concatenates tensors along one dimension.where num_filters_total=num_filters_1+num_filters_2+num_filters_3
-        self.h_pool_flat = tf.reshape(self.h_pool, [-1,self.num_filters_total])  # shape should be:[None,num_filters_total]. here this operation has some result as tf.sequeeze().e.g. x's shape:[3,3];tf.reshape(-1,x) & (3, 3)---->(1,9)
 
-        # 4.=====>add dropout: use tf.nn.dropout
+        self.h_pool = tf.concat(pooled_outputs, 3)
+        self.h_pool_flat = tf.reshape(self.h_pool, [-1,self.num_filters_total])
+
         with tf.name_scope("dropout"):
             self.h_drop = tf.nn.dropout(self.h_pool_flat, keep_prob=self.dropout_keep_prob)  # [None,num_filters_total]
         h = tf.layers.dense(self.h_drop, self.num_filters_total, activation=tf.nn.tanh, use_bias=True)
         return h
 
     def cnn_multiple_layers(self):
-        # 2.=====>loop each filter size. for each filter, do:convolution-pooling layer(a.create filters,b.conv,c.apply nolinearity,d.max-pooling)--->
-        # you can use:tf.nn.conv2d;tf.nn.relu;tf.nn.max_pool; feature shape is 4-d. feature is a new variable
         pooled_outputs = []
-        print("sentence_embeddings_expanded:",self.sentence_embeddings_expanded)
         for i, filter_size in enumerate(self.filter_sizes):
             with tf.variable_scope('cnn_multiple_layers' + "convolution-pooling-%s" % filter_size):
                 # 1) CNN->BN->relu
-                filter = tf.get_variable("filter-%s" % filter_size,[filter_size, self.embed_size, 1, self.num_filters],initializer=self.initializer)
-                conv = tf.nn.conv2d(self.sentence_embeddings_expanded, filter, strides=[1, 1, 1, 1],padding="SAME",name="conv")  # shape:[batch_size,sequence_length - filter_size + 1,1,num_filters]
-                conv = tf.contrib.layers.batch_norm(conv, is_training=self.is_training_flag, scope='cnn1')
-                print(i, "conv1:", conv)
-                b = tf.get_variable("b-%s" % filter_size, [self.num_filters])  # ADD 2017-06-09
-                h = tf.nn.relu(tf.nn.bias_add(conv, b),"relu")  # shape:[batch_size,sequence_length,1,num_filters]. tf.nn.bias_add:adds `bias` to `value`
+                filter1 = tf.get_variable("filter-%s" % filter_size, [filter_size, self.embed_size, 1, self.num_filters],initializer=self.initializer)
+                conv1 = tf.nn.conv2d(self.sentence_embeddings_expanded, filter1, strides=[1, 1, 1, 1], padding="SAME", name="conv")
+                conv1 = tf.contrib.layers.batch_norm(conv1, is_training=self.is_training_flag, scope='cnn1')
+                print(i, "conv1:", conv1)
+                b1 = tf.get_variable("b-%s" % filter_size, [self.num_filters])
+                h1 = tf.nn.relu(tf.nn.bias_add(conv1, b1), "relu")  # shape:[batch_size,sequence_length,1,num_filters]. tf.nn.bias_add:adds `bias` to `value`
 
                 # 2) CNN->BN->relu
-                h = tf.reshape(h, [-1, self.sequence_length, self.num_filters,1])  # shape:[batch_size,sequence_length,num_filters,1]
+                h2 = tf.reshape(h1, [-1, self.sequence_length, self.num_filters, 1])  # shape:[batch_size,sequence_length,num_filters,1]
                 # Layer2:CONV-RELU
-                filter2 = tf.get_variable("filter2-%s" % filter_size,[filter_size, self.num_filters, 1, self.num_filters],initializer=self.initializer)
-                conv2 = tf.nn.conv2d(h, filter2, strides=[1, 1, 1, 1], padding="SAME",name="conv2")  # shape:[batch_size,sequence_length-filter_size*2+2,1,num_filters]
+                filter2 = tf.get_variable("filter2-%s" % filter_size, [filter_size, self.num_filters, 1, self.num_filters], initializer=self.initializer)
+                conv2 = tf.nn.conv2d(h2, filter2, strides=[1, 1, 1, 1], padding="SAME", name="conv2")  # shape:[batch_size,sequence_length-filter_size*2+2,1,num_filters]
                 conv2 = tf.contrib.layers.batch_norm(conv2, is_training=self.is_training_flag, scope='cnn2')
                 print(i, "conv2:", conv2)
-                b2 = tf.get_variable("b2-%s" % filter_size, [self.num_filters])  # ADD 2017-06-09
-                h = tf.nn.relu(tf.nn.bias_add(conv2, b2),"relu2")  # shape:[batch_size,sequence_length,1,num_filters]. tf.nn.bias_add:adds `bias` to `value`
+                b2 = tf.get_variable("b2-%s" % filter_size, [self.num_filters])
+                h2 = tf.nn.relu(tf.nn.bias_add(conv2, b2), "relu2")
 
                 # 3. Max-pooling
-                pooling_max = tf.squeeze(tf.nn.max_pool(h, ksize=[1,self.sequence_length, 1, 1],strides=[1, 1, 1, 1], padding='VALID', name="pool"))
+                pooling_max = tf.squeeze(tf.nn.max_pool(h2, ksize=[1, self.sequence_length, 1, 1], strides=[1, 1, 1, 1], padding='VALID', name="pool"))
                 # pooling_avg=tf.squeeze(tf.reduce_mean(h,axis=1)) #[batch_size,num_filters]
                 print(i, "pooling:", pooling_max)
                 # pooling=tf.concat([pooling_max,pooling_avg],axis=1) #[batch_size,num_filters*2]
@@ -141,10 +124,12 @@ class TextCNN:
         print("h.concat:", h)
 
         with tf.name_scope("dropout"):
-            h = tf.nn.dropout(h,keep_prob=self.dropout_keep_prob)  # [batch_size,sequence_length - filter_size + 1,num_filters]
-        return h  # [batch_size,sequence_length - filter_size + 1,num_filters]
+            h = tf.nn.dropout(h, keep_prob=self.dropout_keep_prob)
 
-    def loss_multilabel(self,l2_lambda=0.0001): #0.0001#this loss function is for multi-label classification
+        h = tf.layers.dense(h, self.num_filters_total, activation=tf.nn.tanh, use_bias=True)
+        return h
+
+    def loss_multilabel(self, l2_lambda=0.0001): #0.0001#this loss function is for multi-label classification
         with tf.name_scope("loss"):
             #input: `logits` and `labels` must have the same shape `[batch_size, num_classes]`
             #output: A 1-D `Tensor` of length `batch_size` of the same type as `logits` with the softmax cross entropy loss.
@@ -163,8 +148,8 @@ class TextCNN:
 
     def train_old(self):
         """based on the loss, use SGD to update parameter"""
-        learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step, self.decay_steps,self.decay_rate, staircase=True)
-        train_op = tf.contrib.layers.optimize_loss(self.loss_val, global_step=self.global_step,learning_rate=learning_rate, optimizer="Adam",clip_gradients=self.clip_gradients)
+        learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step, self.decay_steps, self.decay_rate, staircase=True)
+        train_op = tf.contrib.layers.optimize_loss(self.loss_val, global_step=self.global_step, learning_rate=learning_rate, optimizer="Adam", clip_gradients=self.clip_gradients)
         return train_op
 
     def train(self):
@@ -178,57 +163,3 @@ class TextCNN:
         with tf.control_dependencies(update_ops):  #ADD 2018.06.01
             train_op = optimizer.apply_gradients(zip(gradients, variables))
         return train_op
-
-
-def test():
-    #below is a function test; if you use this for text classifiction, you need to transform sentence to indices of vocabulary first. then feed data to the graph.
-    num_classes=5
-    learning_rate=0.001
-    batch_size=8
-    decay_steps=1000
-    decay_rate=0.95
-    sequence_length=5
-    vocab_size=10000
-    embed_size=100
-    is_training=True
-    dropout_keep_prob=1.0 #0.5
-    filter_sizes=[2,3,4]
-    num_filters=128
-    multi_label_flag=True
-    textRNN=TextCNN(filter_sizes,num_filters,num_classes, learning_rate, batch_size, decay_steps, decay_rate,sequence_length,vocab_size,embed_size,is_training,multi_label_flag=multi_label_flag)
-    with tf.Session() as sess:
-       sess.run(tf.global_variables_initializer())
-       for i in range(500):
-           input_x=np.random.randn(batch_size,sequence_length) #[None, self.sequence_length]
-           input_x[input_x>=0]=1
-           input_x[input_x <0] = 0
-           input_y_multilabel=get_label_y(input_x)
-           loss,possibility,W_projection_value,_=sess.run([textRNN.loss_val,textRNN.possibility,textRNN.W_projection,textRNN.train_op],
-                                                    feed_dict={textRNN.input_x:input_x,textRNN.input_y:input_y_multilabel,
-                                                               textRNN.dropout_keep_prob:dropout_keep_prob,textRNN.tst:False})
-           print(i,"loss:",loss,"-------------------------------------------------------")
-           print("label:",input_y_multilabel)
-
-def get_label_y(input_x):
-    length=input_x.shape[0]
-    input_y=np.zeros((input_x.shape))
-    for i in range(length):
-        element=input_x[i,:] #[5,]
-        result=compute_single_label(element)
-        input_y[i,:]=result
-    return input_y
-
-def compute_single_label(listt):
-    result=[]
-    length=len(listt)
-    for i,e in enumerate(listt):
-        previous=listt[i-1] if i>0 else 0
-        current=listt[i]
-        next=listt[i+1] if i<length-1 else 0
-        summ=previous+current+next
-        if summ>=2:
-            summ=1
-        else:
-            summ=0
-        result.append(summ)
-    return result
