@@ -4,25 +4,12 @@ import os
 import util
 import textCNN_train
 
-FLAGS = tf.flags.FLAGS
-
-
-tf.flags.DEFINE_float("learning_rate", 0.0003, "learning rate")
-tf.flags.DEFINE_integer("batch_size", 64, "Batch size for training/evaluating.") #批处理的大小 32-->128
-tf.flags.DEFINE_integer("decay_steps", 1000, "how many steps before decay learning rate.") #6000批处理的大小 32-->128
-tf.flags.DEFINE_float("decay_rate", 1, "Rate of decay for learning rate.") #0.65一次衰减多少
-tf.flags.DEFINE_integer("sentence_len", 30, "max sentence length")
-tf.flags.DEFINE_integer("embed_size", 128, "embedding size")
-tf.flags.DEFINE_boolean("is_training_flag", True, "is training.true:tranining,false:testing/inference")
-tf.flags.DEFINE_integer("num_epochs", 10, "number of epochs to run.")
-tf.flags.DEFINE_integer("validate_every", 1, "Validate every validate_every epochs.") #每10轮做一次验证
-tf.flags.DEFINE_integer("num_filters", 128, "number of filters") #256--->512
-tf.flags.DEFINE_string("name_scope", "cnn", "name scope value.")
 filter_sizes = [5, 6, 7]
 
 
 #1.load data(X:list of lint,y:int). 2.create session. 3.feed data. 4.training (5.validation) ,(6.prediction)
 def main(_):
+    FLAGS = textCNN_train.tfFlagConfig()
     word2index, _, _, _, _, testX, testY = textCNN_train.load_data(util.dataPath + 'TrainTest.h5py', util.dataPath + 'word2index.pickle')
     vocab_size = len(word2index)
     print("cnn_model.vocab_size:", vocab_size)
