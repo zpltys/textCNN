@@ -19,7 +19,7 @@ def tfFlagConfig():
     tf.flags.DEFINE_integer("sentence_len", 30, "max sentence length")
     tf.flags.DEFINE_integer("embed_size", 128, "embedding size")
     tf.flags.DEFINE_boolean("is_training_flag", True, "is training.true:tranining,false:testing/inference")
-    tf.flags.DEFINE_integer("num_epochs", 10, "number of epochs to run.")
+    tf.flags.DEFINE_integer("num_epochs", 15, "number of epochs to run.")
     tf.flags.DEFINE_integer("validate_every", 1, "Validate every validate_every epochs.")
     tf.flags.DEFINE_integer("num_filters", 128, "number of filters")
     tf.flags.DEFINE_string("name_scope", "cnn", "name scope value.")
