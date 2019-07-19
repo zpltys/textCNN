@@ -59,7 +59,7 @@ class TextCNN:
         self.sentence_embeddings_expanded = tf.expand_dims(self.embedded_words, -1)
 
         if self.use_mulitple_layer_cnn:
-            print("use single layer CNN")
+            print("use multi layer CNN")
             h = self.cnn_multiple_layers()
         else:
             print("use single layer CNN")
@@ -95,6 +95,7 @@ class TextCNN:
         pooled_outputs = []
         for i, filter_size in enumerate(self.filter_sizes):
             with tf.variable_scope('cnn_multiple_layers' + "convolution-pooling-%s" % filter_size):
+                print(i, "sentence_embeddings_expanded:", self.sentence_embeddings_expanded)
                 # 1) CNN->BN->relu
                 filter1 = tf.get_variable("filter-%s" % filter_size, [filter_size, self.embed_size, 1, self.num_filters],initializer=self.initializer)
                 conv1 = tf.nn.conv2d(self.sentence_embeddings_expanded, filter1, strides=[1, 1, 1, 1], padding="SAME", name="conv")
@@ -107,7 +108,7 @@ class TextCNN:
                 h2 = tf.reshape(h1, [-1, self.sequence_length, self.num_filters, 1])  # shape:[batch_size,sequence_length,num_filters,1]
                 # Layer2:CONV-RELU
                 filter2 = tf.get_variable("filter2-%s" % filter_size, [filter_size, self.num_filters, 1, self.num_filters], initializer=self.initializer)
-                conv2 = tf.nn.conv2d(h2, filter2, strides=[1, 1, 1, 1], padding="SAME", name="conv2")  # shape:[batch_size,sequence_length-filter_size*2+2,1,num_filters]
+                conv2 = tf.nn.conv2d(h2, filter2, strides=[1, 1, 1, 1], padding="SAME", name="conv2")  # shape:[batch_size,sequence_length,1,num_filters]
                 conv2 = tf.contrib.layers.batch_norm(conv2, is_training=self.is_training_flag, scope='cnn2')
                 print(i, "conv2:", conv2)
                 b2 = tf.get_variable("b2-%s" % filter_size, [self.num_filters])
