@@ -13,7 +13,7 @@ _PAD="_PAD"
 _UNK="UNK"
 
 dataPath = '../data/'
-modelPath = '../model/'
+modelPath = '../model_improved/'
 sourceFile = dataPath + 'toutiao_cat_data.txt'
 debug = True
 max_len = 30

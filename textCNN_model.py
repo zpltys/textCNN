@@ -131,26 +131,15 @@ class TextCNN:
 
     def loss_multilabel(self, l2_lambda=0.0001): #0.0001#this loss function is for multi-label classification
         with tf.name_scope("loss"):
-            #input: `logits` and `labels` must have the same shape `[batch_size, num_classes]`
-            #output: A 1-D `Tensor` of length `batch_size` of the same type as `logits` with the softmax cross entropy loss.
-            #input_y:shape=(?, 1999); logits:shape=(?, 1999)
-            # let `x = logits`, `z = labels`.  The logistic loss is:z * -log(sigmoid(x)) + (1 - z) * -log(1 - sigmoid(x))
-            losses = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.input_y, logits=self.logits);#losses=tf.nn.softmax_cross_entropy_with_logits(labels=self.input__y,logits=self.logits)
-            #losses=-self.input_y_multilabel*tf.log(self.logits)-(1-self.input_y_multilabel)*tf.log(1-self.logits)
-            print("sigmoid_cross_entropy_with_logits.losses:", losses) #shape=(?, 1999).
-            losses = tf.reduce_sum(losses,axis=1) #shape=(?,). loss for all data in the batch
-            loss = tf.reduce_mean(losses)         #shape=().   average loss in the batch
+            losses = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.input_y, logits=self.logits)
+            print("sigmoid_cross_entropy_with_logits.losses:", losses)
+            losses = tf.reduce_sum(losses,axis=1)
+            loss = tf.reduce_mean(losses)
             l2_losses = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name]) * l2_lambda
             loss = loss+l2_losses
         return loss
 
 
-
-    def train_old(self):
-        """based on the loss, use SGD to update parameter"""
-        learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step, self.decay_steps, self.decay_rate, staircase=True)
-        train_op = tf.contrib.layers.optimize_loss(self.loss_val, global_step=self.global_step, learning_rate=learning_rate, optimizer="Adam", clip_gradients=self.clip_gradients)
-        return train_op
 
     def train(self):
         """based on the loss, use SGD to update parameter"""
@@ -159,7 +148,7 @@ class TextCNN:
         optimizer = tf.train.AdamOptimizer(learning_rate)
         gradients, variables = zip(*optimizer.compute_gradients(self.loss_val))
         gradients, _ = tf.clip_by_global_norm(gradients, 5.0)
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS) #ADD 2018.06.01
-        with tf.control_dependencies(update_ops):  #ADD 2018.06.01
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops):
             train_op = optimizer.apply_gradients(zip(gradients, variables))
         return train_op

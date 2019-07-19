@@ -12,20 +12,20 @@ from sklearn import metrics
 def tfFlagConfig():
     FLAGS = tf.flags.FLAGS
 
-    tf.flags.DEFINE_float("learning_rate", 0.0003, "learning rate")
-    tf.flags.DEFINE_integer("batch_size", 64, "Batch size for training/evaluating.")  # 批处理的大小 32-->128
-    tf.flags.DEFINE_integer("decay_steps", 1000, "how many steps before decay learning rate.")  # 6000批处理的大小 32-->128
-    tf.flags.DEFINE_float("decay_rate", 1, "Rate of decay for learning rate.")  # 0.65一次衰减多少
+    tf.flags.DEFINE_float("learning_rate", 0.003, "learning rate")
+    tf.flags.DEFINE_integer("batch_size", 64, "Batch size for training/evaluating.")
+    tf.flags.DEFINE_integer("decay_steps", 1000, "how many steps before decay learning rate.")
+    tf.flags.DEFINE_float("decay_rate", 0.95, "Rate of decay for learning rate.")
     tf.flags.DEFINE_integer("sentence_len", 30, "max sentence length")
     tf.flags.DEFINE_integer("embed_size", 128, "embedding size")
     tf.flags.DEFINE_boolean("is_training_flag", True, "is training.true:tranining,false:testing/inference")
     tf.flags.DEFINE_integer("num_epochs", 10, "number of epochs to run.")
-    tf.flags.DEFINE_integer("validate_every", 1, "Validate every validate_every epochs.")  # 每10轮做一次验证
-    tf.flags.DEFINE_integer("num_filters", 128, "number of filters")  # 256--->512
+    tf.flags.DEFINE_integer("validate_every", 1, "Validate every validate_every epochs.")
+    tf.flags.DEFINE_integer("num_filters", 128, "number of filters")
     tf.flags.DEFINE_string("name_scope", "cnn", "name scope value.")
     return FLAGS
 
-filter_sizes = [5, 6, 7]
+filter_sizes = [5, 7, 9]
 
 
 #1.load data(X:list of lint,y:int). 2.create session. 3.feed data. 4.training (5.validation) ,(6.prediction)
@@ -76,21 +76,9 @@ def main(_):
                 if counter % 50 == 0:
                     print("Epoch %d\tBatch %d\tTrain Loss:%.3f\tLearning rate:%.5f" % (epoch, counter, loss / float(counter), lr))
 
-                ########################################################################################################
-                if start % (3000*FLAGS.batch_size) == 0:
-                    eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, vaildX, vaildY, FLAGS)
-                    print("Epoch %d Validation Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (epoch, eval_loss, f1_score, f1_micro, f1_macro))
-                    # save model to checkpoint
-                    save_path = util.modelPath + "model.ckpt"
-                    print("Going to save model..")
-                    saver.save(sess, save_path, global_step=epoch)
-                ########################################################################################################
 
-            print("going to increment epoch counter....")
             sess.run(textCNN.epoch_increment)
-
             # 4.validation
-            print(epoch, FLAGS.validate_every, (epoch % FLAGS.validate_every == 0))
             if epoch % FLAGS.validate_every == 0:
                 eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, FLAGS)
                 print("Epoch %d Validation Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (epoch,eval_loss,f1_score,f1_micro,f1_macro))
@@ -102,7 +90,7 @@ def main(_):
         test_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, FLAGS, False)
         print("Test Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (test_loss, f1_score, f1_micro, f1_macro))
 
-    writer = tf.summary.FileWriter("../log/textCNN.log", sess.graph)
+    writer = tf.summary.FileWriter("../log/textCNN_improved.log", sess.graph)
     writer.close()
 
 
