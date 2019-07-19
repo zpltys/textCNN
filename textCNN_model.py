@@ -130,7 +130,7 @@ class TextCNN:
         h = tf.layers.dense(h, self.num_filters_total, activation=tf.nn.tanh, use_bias=True)
         return h
 
-    def loss(self, l2_lambda=0.0001): #0.0001#this loss function is for multi-label classification
+    def loss(self, l2_lambda=0.001): #0.0001#this loss function is for multi-label classification
         with tf.name_scope("loss"):
             losses = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.input_y, logits=self.logits)
             print("sigmoid_cross_entropy_with_logits.losses:", losses)
