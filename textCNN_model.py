@@ -116,11 +116,12 @@ class TextCNN:
 
                 # 3. Max-pooling
                 pooling_max = tf.nn.max_pool(h2, ksize=[1, self.sequence_length - filter_size + 1, 1, 1], strides=[1, 1, 1, 1], padding='VALID', name="pool")
-                print(i, "pooling shape:", pooling_max.shape)
-                pooling_max = tf.squeeze(pooling_max)
+                print(i, "pooling:", pooling_max)
+                pooling_max = tf.reshape(pooling_max, [-1, self.num_filters])
+                print(i, "pooling:", pooling_max)
                 pooled_outputs.append(pooling_max)  # h:[batch_size,sequence_length,1,num_filters]
         # concat
-        h = tf.concat(pooled_outputs, axis=3)  # [batch_size,num_filters*len(self.filter_sizes)]
+        h = tf.concat(pooled_outputs, axis=1)  # [batch_size,num_filters*len(self.filter_sizes)]
         print("h.concat:", h)
 
         with tf.name_scope("dropout"):
