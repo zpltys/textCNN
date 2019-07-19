@@ -98,7 +98,7 @@ class TextCNN:
                 print(i, "sentence_embeddings_expanded:", self.sentence_embeddings_expanded)
                 # 1) CNN->BN->relu
                 filter1 = tf.get_variable("filter-%s" % filter_size, [filter_size, self.embed_size, 1, self.num_filters],initializer=self.initializer)
-                conv1 = tf.nn.conv2d(self.sentence_embeddings_expanded, filter1, strides=[1, 1, 1, 1], padding="SAME", name="conv")
+                conv1 = tf.nn.conv2d(self.sentence_embeddings_expanded, filter1, strides=[1, 1, 1, 1], padding="VALID", name="conv")
                 conv1 = tf.contrib.layers.batch_norm(conv1, is_training=self.is_training_flag, scope='cnn1')
                 print(i, "conv1:", conv1)
                 b1 = tf.get_variable("b-%s" % filter_size, [self.num_filters])
@@ -108,14 +108,14 @@ class TextCNN:
                 h2 = tf.reshape(h1, [-1, self.sequence_length, self.num_filters, 1])  # shape:[batch_size,sequence_length,num_filters,1]
                 # Layer2:CONV-RELU
                 filter2 = tf.get_variable("filter2-%s" % filter_size, [filter_size, self.num_filters, 1, self.num_filters], initializer=self.initializer)
-                conv2 = tf.nn.conv2d(h2, filter2, strides=[1, 1, 1, 1], padding="SAME", name="conv2")  # shape:[batch_size,sequence_length,1,num_filters]
+                conv2 = tf.nn.conv2d(h2, filter2, strides=[1, 1, 1, 1], padding="VALID", name="conv2")  # shape:[batch_size,sequence_length,1,num_filters]
                 conv2 = tf.contrib.layers.batch_norm(conv2, is_training=self.is_training_flag, scope='cnn2')
                 print(i, "conv2:", conv2)
                 b2 = tf.get_variable("b2-%s" % filter_size, [self.num_filters])
                 h2 = tf.nn.relu(tf.nn.bias_add(conv2, b2), "relu2")
 
                 # 3. Max-pooling
-                pooling_max = tf.nn.max_pool(h2, ksize=[1, self.sequence_length, 1, 1], strides=[1, 1, 1, 1], padding='VALID', name="pool")
+                pooling_max = tf.nn.max_pool(h2, ksize=[1, self.sequence_length - 2 * filter_size + 2, 1, 1], strides=[1, 1, 1, 1], padding='VALID', name="pool")
                 print(i, "pooling shape:", pooling_max.shape)
                 pooling_max = tf.squeeze(pooling_max)
                 pooled_outputs.append(pooling_max)  # h:[batch_size,sequence_length,1,num_filters]
