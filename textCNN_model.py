@@ -116,7 +116,7 @@ class TextCNN:
                 # 3. Max-pooling
                 pooling_max = tf.squeeze(tf.nn.max_pool(h2, ksize=[1, self.sequence_length, 1, 1], strides=[1, 1, 1, 1], padding='VALID', name="pool"))
                 # pooling_avg=tf.squeeze(tf.reduce_mean(h,axis=1)) #[batch_size,num_filters]
-                print(i, "pooling:", pooling_max)
+                print(i, "pooling shape:", pooling_max.shape)
                 # pooling=tf.concat([pooling_max,pooling_avg],axis=1) #[batch_size,num_filters*2]
                 pooled_outputs.append(pooling_max)  # h:[batch_size,sequence_length,1,num_filters]
         # concat
