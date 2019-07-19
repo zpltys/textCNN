@@ -105,7 +105,7 @@ class TextCNN:
                 h1 = tf.nn.relu(tf.nn.bias_add(conv1, b1), "relu")  # shape:[batch_size,sequence_length,1,num_filters]. tf.nn.bias_add:adds `bias` to `value`
 
                 # 2) CNN->BN->relu
-                h2 = tf.reshape(h1, [-1, self.sequence_length, self.num_filters, 1])  # shape:[batch_size,sequence_length,num_filters,1]
+                h2 = tf.reshape(h1, [-1, self.sequence_length - filter_size + 1, self.num_filters, 1])  # shape:[batch_size,sequence_length,num_filters,1]
                 # Layer2:CONV-RELU
                 filter2 = tf.get_variable("filter2-%s" % filter_size, [filter_size, self.num_filters, 1, self.num_filters], initializer=self.initializer)
                 conv2 = tf.nn.conv2d(h2, filter2, strides=[1, 1, 1, 1], padding="VALID", name="conv2")  # shape:[batch_size,sequence_length,1,num_filters]
@@ -115,7 +115,7 @@ class TextCNN:
                 h2 = tf.nn.relu(tf.nn.bias_add(conv2, b2), "relu2")
 
                 # 3. Max-pooling
-                pooling_max = tf.nn.max_pool(h2, ksize=[1, self.sequence_length - filter_size + 1, 1, 1], strides=[1, 1, 1, 1], padding='VALID', name="pool")
+                pooling_max = tf.nn.max_pool(h2, ksize=[1, self.sequence_length - 2 * filter_size + 2, 1, 1], strides=[1, 1, 1, 1], padding='VALID', name="pool")
                 print(i, "pooling:", pooling_max)
                 pooling_max = tf.reshape(pooling_max, [-1, self.num_filters])
                 print(i, "pooling:", pooling_max)
