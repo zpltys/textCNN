@@ -12,7 +12,7 @@ from sklearn import metrics
 def tfFlagConfig():
     FLAGS = tf.flags.FLAGS
 
-    tf.flags.DEFINE_float("learning_rate", 0.003, "learning rate")
+    tf.flags.DEFINE_float("learning_rate", 0.0005, "learning rate")
     tf.flags.DEFINE_integer("batch_size", 64, "Batch size for training/evaluating.")
     tf.flags.DEFINE_integer("decay_steps", 1000, "how many steps before decay learning rate.")
     tf.flags.DEFINE_float("decay_rate", 0.95, "Rate of decay for learning rate.")
