@@ -150,7 +150,7 @@ class TextCNN:
     def train(self):
         """based on the loss, use SGD to update parameter"""
         learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step, self.decay_steps, self.decay_rate, staircase=False)
-        #self.learning_rate_ = learning_rate
+        self.learning_rate_ = learning_rate
         optimizer = tf.train.AdamOptimizer(learning_rate)
         gradients, variables = zip(*optimizer.compute_gradients(self.loss_val))
         gradients, _ = tf.clip_by_global_norm(gradients, 5.0)
