@@ -12,7 +12,7 @@ from sklearn import metrics
 def tfFlagConfig():
     FLAGS = tf.flags.FLAGS
 
-    tf.flags.DEFINE_float("learning_rate", 0.001, "learning rate")
+    tf.flags.DEFINE_float("learning_rate", 0.0005, "learning rate")
     tf.flags.DEFINE_integer("batch_size", 64, "Batch size for training/evaluating.")
     tf.flags.DEFINE_integer("decay_steps", 1000, "how many steps before decay learning rate.")
     tf.flags.DEFINE_float("decay_rate", 0.96, "Rate of decay for learning rate.")
@@ -75,8 +75,6 @@ def main(_):
                 loss, counter = loss+curr_loss, counter+1
                 if counter % 50 == 0:
                     print("Epoch %d\tBatch %d\t global_step: %d\tTrain Loss:%.3f\tLearning rate:%.5f" % (epoch, counter, gp, loss / float(counter), lr))
-                    print("decay_steps:%d\t decay_rate:%f" % (textCNN.decay_steps, textCNN.decay_rate))
-
 
             sess.run(textCNN.epoch_increment)
             # 4.validation
