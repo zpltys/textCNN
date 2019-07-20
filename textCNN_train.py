@@ -120,6 +120,10 @@ def do_eval(sess, textCNN, evalX, evalY, FLAGS, valid=True):
     predict_count = {}
     true_count = {}
     for i in range(len(y_true)):
+        if y_predict[i] not in predict_count.keys():
+            predict_count[y_predict[i]] = 0
+        if y_true[i] not in true_count.keys():
+            true_count[y_true[i]] = 0
         predict_count[y_predict[i]] += 1
         true_count[y_true[i]] += 1
 
