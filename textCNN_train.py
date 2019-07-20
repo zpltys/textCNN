@@ -117,6 +117,15 @@ def do_eval(sess, textCNN, evalX, evalY, FLAGS, valid=True):
     y_predict = [findMaxindex(y) for y in predict]
     y_true = [findMaxindex(y) for y in evalY]
 
+    predict_count = {}
+    true_count = {}
+    for i in range(len(y_true)):
+        predict_count[y_predict[i]] += 1
+        true_count[y_true[i]] += 1
+
+    print(predict_count)
+    print(true_count)
+
     precision_macro = metrics.precision_score(y_true, y_predict, average='macro')
     precision_micro = metrics.precision_score(y_true, y_predict, average='micro')
     precision = (precision_macro + precision_micro) / 2.0
