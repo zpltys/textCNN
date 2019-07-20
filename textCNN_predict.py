@@ -4,7 +4,7 @@ import os
 import util
 import textCNN_train
 
-filter_sizes = [5, 6, 7]
+filter_sizes = [5, 7, 9]
 
 
 #1.load data(X:list of lint,y:int). 2.create session. 3.feed data. 4.training (5.validation) ,(6.prediction)
