@@ -35,8 +35,8 @@ def main(_):
     vocab_size = len(word2index)
     print("cnn_model.vocab_size:", vocab_size)
 
-    trainX = np.concatenate([trainX, vaildX, testX])
-    trainY = np.concatenate([trainY, vaildY, testY])
+    trainX = np.concatenate([trainX, vaildX])
+    trainY = np.concatenate([trainY, vaildY])
 
     num_examples, FLAGS.sentence_len = trainX.shape
     print("num_examples of training:", num_examples, " ;sentence_len:", FLAGS.sentence_len)
@@ -84,7 +84,7 @@ def main(_):
             sess.run(textCNN.epoch_increment)
             # 4.validation
             if epoch % FLAGS.validate_every == 0:
-                eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, FLAGS)
+                eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, FLAGS, False)
                 print("Epoch %d Validation Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (epoch, eval_loss, f1_score, f1_micro, f1_macro))
                 #save model to checkpoint
                 save_path = util.modelPath + "model.ckpt"
