@@ -35,8 +35,8 @@ def main(_):
     vocab_size = len(word2index)
     print("cnn_model.vocab_size:", vocab_size)
 
-    trainX += vaildX + testX
-    trainY += vaildY + testY
+    trainX = np.concatenate([trainX, vaildX, testX])
+    trainY = np.concatenate([trainY, vaildY, testY])
 
     num_examples, FLAGS.sentence_len = trainX.shape
     print("num_examples of training:", num_examples, " ;sentence_len:", FLAGS.sentence_len)
