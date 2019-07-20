@@ -75,6 +75,9 @@ def main(_):
                 loss, counter = loss+curr_loss, counter+1
                 if counter % 50 == 0:
                     print("Epoch %d\tBatch %d\t global_step: %d\tTrain Loss:%.3f\tLearning rate:%.5f" % (epoch, counter, gp, loss / float(counter), lr))
+                    steps, rate = sess.run([textCNN.decay_steps, textCNN.decay_rate])
+                    print("decay_steps:%d\t decay_rate:%f" % (steps, rate))
+
 
             sess.run(textCNN.epoch_increment)
             # 4.validation
