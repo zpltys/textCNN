@@ -12,7 +12,7 @@ from sklearn import metrics
 def tfFlagConfig():
     FLAGS = tf.flags.FLAGS
 
-    tf.flags.DEFINE_float("learning_rate", 0.0005, "learning rate")
+    tf.flags.DEFINE_float("learning_rate", 0.0003, "learning rate")
     tf.flags.DEFINE_integer("batch_size", 64, "Batch size for training/evaluating.")
     tf.flags.DEFINE_integer("decay_steps", 1000, "how many steps before decay learning rate.")
     tf.flags.DEFINE_float("decay_rate", 0.96, "Rate of decay for learning rate.")
@@ -25,7 +25,7 @@ def tfFlagConfig():
     tf.flags.DEFINE_string("name_scope", "cnn", "name scope value.")
     return FLAGS
 
-filter_sizes = [5, 6, 7]
+filter_sizes = [5, 6, 3]
 
 
 #1.load data(X:list of lint,y:int). 2.create session. 3.feed data. 4.training (5.validation) ,(6.prediction)
@@ -34,6 +34,9 @@ def main(_):
     word2index, trainX, trainY, vaildX, vaildY, testX, testY = load_data(util.dataPath + 'TrainTest.h5py', util.dataPath + 'word2index.pickle')
     vocab_size = len(word2index)
     print("cnn_model.vocab_size:", vocab_size)
+
+    trainX += vaildX + testX
+    trainY += vaildY + testY
 
     num_examples, FLAGS.sentence_len = trainX.shape
     print("num_examples of training:", num_examples, " ;sentence_len:", FLAGS.sentence_len)
@@ -76,16 +79,18 @@ def main(_):
                 if counter % 50 == 0:
                     print("Epoch %d\tBatch %d\t global_step: %d\tTrain Loss:%.3f\tLearning rate:%.5f" % (epoch, counter, gp, loss / float(counter), lr))
 
+
+
             sess.run(textCNN.epoch_increment)
             # 4.validation
             if epoch % FLAGS.validate_every == 0:
                 eval_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, FLAGS)
-                print("Epoch %d Validation Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (epoch,eval_loss,f1_score,f1_micro,f1_macro))
+                print("Epoch %d Validation Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (epoch, eval_loss, f1_score, f1_micro, f1_macro))
                 #save model to checkpoint
                 save_path = util.modelPath + "model.ckpt"
                 saver.save(sess, save_path, global_step=epoch)
 
-        # 5.最后在测试集上做测试，并报告测试准确率 Test
+
         test_loss, f1_score, f1_micro, f1_macro = do_eval(sess, textCNN, testX, testY, FLAGS, False)
         print("Test Loss:%.3f\tF1 Score:%.3f\tF1_micro:%.3f\tF1_macro:%.3f" % (test_loss, f1_score, f1_micro, f1_macro))
 
@@ -99,7 +104,7 @@ def do_eval(sess, textCNN, evalX, evalY, FLAGS, valid=True):
         evalX = evalX[0:3000]
         evalY = evalY[0:3000]
     number_examples = len(evalX)
-    eval_loss, eval_counter= 0.0, 0
+    eval_loss, eval_counter = 0.0, 0
     batch_size = FLAGS.batch_size
     predict = []
 
