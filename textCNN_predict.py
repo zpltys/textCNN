@@ -22,7 +22,7 @@ def main(_):
     with tf.Session(config=config) as sess:
         #Instantiate Model
         textCNN = TextCNN(filter_sizes, FLAGS.num_filters, 15, FLAGS.learning_rate, FLAGS.batch_size, FLAGS.decay_steps,
-                        FLAGS.decay_rate, FLAGS.sentence_len, vocab_size, FLAGS.embed_size, use_mulitple_layer_cnn=True)
+                        FLAGS.decay_rate, FLAGS.sentence_len, vocab_size, FLAGS.embed_size, use_mulitple_layer_cnn=util.use_mulitple_layer_cnn)
 
         #Initialize Save
         saver = tf.train.Saver()

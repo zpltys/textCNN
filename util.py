@@ -13,10 +13,11 @@ _PAD="_PAD"
 _UNK="UNK"
 
 dataPath = '../data/'
-modelPath = '../model_improved/'
+modelPath = '../model/'
 sourceFile = dataPath + 'toutiao_cat_data.txt'
 debug = True
 max_len = 30
+use_mulitple_layer_cnn = True
 
 
 def load_data_multilabel(traning_data_path,vocab_word2index, vocab_label2index,sentence_len,training_portion=0.95):
