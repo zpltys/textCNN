@@ -31,6 +31,7 @@ class TextCNN:
         self.use_mulitple_layer_cnn = use_mulitple_layer_cnn
 
         self.global_step = tf.Variable(0, trainable=False, name="Global_Step")
+        self.global_step_increament = tf.assign_add(self.global_step, tf.constant(1))
         self.epoch_step = tf.Variable(0, trainable=False, name="Epoch_Step")
         self.epoch_increment = tf.assign_add(self.epoch_step, tf.constant(1))
         self.b1 = tf.Variable(tf.ones([self.num_filters]) / 10)
@@ -148,7 +149,6 @@ class TextCNN:
 
     def train(self):
         """based on the loss, use SGD to update parameter"""
-        self.global_step = self.global_step + 1
         learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step, self.decay_steps, self.decay_rate, staircase=True)
         self.learning_rate_ = learning_rate
         optimizer = tf.train.AdamOptimizer(learning_rate)

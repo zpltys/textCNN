@@ -12,10 +12,10 @@ from sklearn import metrics
 def tfFlagConfig():
     FLAGS = tf.flags.FLAGS
 
-    tf.flags.DEFINE_float("learning_rate", 0.0005, "learning rate")
+    tf.flags.DEFINE_float("learning_rate", 0.001, "learning rate")
     tf.flags.DEFINE_integer("batch_size", 64, "Batch size for training/evaluating.")
     tf.flags.DEFINE_integer("decay_steps", 1000, "how many steps before decay learning rate.")
-    tf.flags.DEFINE_float("decay_rate", 0.95, "Rate of decay for learning rate.")
+    tf.flags.DEFINE_float("decay_rate", 0.96, "Rate of decay for learning rate.")
     tf.flags.DEFINE_integer("sentence_len", 30, "max sentence length")
     tf.flags.DEFINE_integer("embed_size", 128, "embedding size")
     tf.flags.DEFINE_boolean("is_training_flag", True, "is training.true:tranining,false:testing/inference")
@@ -71,7 +71,7 @@ def main(_):
                 feed_dict = {textCNN.input_x: trainX[start:end], textCNN.dropout_keep_prob: 0.8,
                              textCNN.is_training_flag: FLAGS.is_training_flag, textCNN.input_y: trainY[start:end]}
 
-                curr_loss, lr, _, gp = sess.run([textCNN.loss_val, textCNN.learning_rate, textCNN.train_op, textCNN.global_step], feed_dict)
+                curr_loss, lr, _, gp = sess.run([textCNN.loss_val, textCNN.learning_rate, textCNN.train_op, textCNN.global_step_increament], feed_dict)
                 loss, counter = loss+curr_loss, counter+1
                 if counter % 50 == 0:
                     print("Epoch %d\tBatch %d\t global_step: %d\tTrain Loss:%.3f\tLearning rate:%.5f" % (epoch, counter, gp, loss / float(counter), lr))
