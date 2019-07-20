@@ -25,7 +25,7 @@ def tfFlagConfig():
     tf.flags.DEFINE_string("name_scope", "cnn", "name scope value.")
     return FLAGS
 
-filter_sizes = [5, 7, 9]
+filter_sizes = [5, 6, 7]
 
 
 #1.load data(X:list of lint,y:int). 2.create session. 3.feed data. 4.training (5.validation) ,(6.prediction)
